@@ -1521,13 +1521,13 @@ public class Quests extends JavaPlugin implements ConversationAbandonedListener,
 
         }
     }
-    
+
     private void adminPurge(final CommandSender cs, String[] args) {
 
         if (cs.hasPermission("quests.admin.*") || cs.hasPermission("quests.admin.purge")) {
 
             Quester quester = getQuester(args[1]);
-            
+
             if (quester == null) {
 				cs.sendMessage(YELLOW + Lang.get("playerNotFound"));
 				return;
@@ -1560,31 +1560,31 @@ public class Quests extends JavaPlugin implements ConversationAbandonedListener,
 
         }
     }
-    
+
     private void adminStats(final CommandSender cs, String[] args) {
-    	
+
         if (cs.hasPermission("quests.admin.*") && cs.hasPermission("quests.admin.stats")) {
-        	
+
             questsStats(cs, args);
-        	
+
         } else {
-        	
+
         	cs.sendMessage(RED + Lang.get("questCmdNoPerms"));
-        	
+
         }
     }
 
     private void adminRemove(final CommandSender cs, String[] args) {
-    	
+
         if (cs.hasPermission("quests.admin.*") && cs.hasPermission("quests.admin.remove")) {
-        	
+
             Quester quester = getQuester(args[1]);
 
             if (quester == null) {
 				cs.sendMessage(YELLOW + Lang.get("playerNotFound"));
 				return;
 			}
-            
+
             Quest toRemove = findQuest(MiscUtil.concatArgArray(args, 2, args.length - 1, ' '));
             if (toRemove == null) {
                 cs.sendMessage(RED + Lang.get("questNotFound"));
@@ -1602,14 +1602,14 @@ public class Quests extends JavaPlugin implements ConversationAbandonedListener,
             cs.sendMessage(PURPLE + " UUID: " + DARKAQUA + quester.id.toString());
 
             quester.hardRemove(toRemove);
-            
+
             quester.saveData();
             quester.updateJournal();
 
         } else {
-        	
+
         	cs.sendMessage(RED + Lang.get("questCmdNoPerms"));
-        	
+
         }
     }
 
@@ -1805,11 +1805,11 @@ public class Quests extends JavaPlugin implements ConversationAbandonedListener,
     private void questsStats(final CommandSender cs, String[] args) {
 
     	Quester quester;
-    	
+
     	if (args != null) {
-    		
+
     		quester = getQuester(args[1]);
-    		
+
 			if (quester == null) {
 				cs.sendMessage(YELLOW + Lang.get("playerNotFound"));
 				return;
@@ -1822,7 +1822,7 @@ public class Quests extends JavaPlugin implements ConversationAbandonedListener,
     		quester = getQuester(((Player)cs).getUniqueId());
     		cs.sendMessage(GOLD + "- " + ((Player)cs).getName() + " -");
     	}
-    	
+
         cs.sendMessage(YELLOW + Lang.get("questPointsDisplay") + " " + PURPLE + quester.questPoints);
         if (quester.currentQuests.isEmpty()) {
             cs.sendMessage(YELLOW + Lang.get("currentQuest") + " " + PURPLE + Lang.get("none"));
@@ -2418,33 +2418,32 @@ public class Quests extends JavaPlugin implements ConversationAbandonedListener,
     }
 
     private void showObjectives(final Player player) {
-
-        if (getQuester(player.getUniqueId()).currentQuests.isEmpty() == false) {
-
-            for (Quest q : getQuester(player.getUniqueId()).currentQuests.keySet()) {
-
-                if (getQuester(player.getUniqueId()).getQuestData(q).delayStartTime == 0) {
-
-                    String msg = Lang.get("questObjectivesTitle");
-                    msg = msg.replaceAll("<quest>", q.name);
-                    player.sendMessage(ChatColor.GOLD + msg);
-
-                    for (String s : getQuester(player.getUniqueId()).getObjectivesReal(q)) {
-
-                        player.sendMessage(s);
-
-                    }
-
-                }
-
-            }
-
-        } else {
-
-            player.sendMessage(YELLOW + Lang.get("noActiveQuest"));
-
+        Quester quester = getQuester(player.getUniqueId());
+        if (quester == null) {
+            return;
         }
 
+        if (quester.currentQuests.isEmpty()) {
+            player.sendMessage(YELLOW + Lang.get("noActiveQuest"));
+        }
+
+        for (Quest q : quester.currentQuests.keySet()) {
+            QuestData questData = quester.getQuestData(q);
+            if (questData == null) {
+                continue;
+            }
+            if (questData.delayStartTime != 0) {
+                continue;
+            }
+
+            String msg = Lang.get("questObjectivesTitle");
+            msg = msg.replaceAll("<quest>", q.name);
+            player.sendMessage(ChatColor.GOLD + msg);
+
+            for (String s : quester.getObjectivesReal(q)) {
+                player.sendMessage(s);
+            }
+        }
     }
 
     public void printAdminHelp(CommandSender cs) {
@@ -2621,14 +2620,14 @@ public class Quests extends JavaPlugin implements ConversationAbandonedListener,
     public Quester getQuester(String name) {
     	UUID id = null;
     	Quester quester = null;
-    	
+
     	for (Player p : Bukkit.getOnlinePlayers()) {
         	if (p.getName().equalsIgnoreCase(name)) {
         		id = p.getUniqueId();
         		break;
         	}
         }
-    	
+
     	try {
     		if (id == null) {
     			id = UUIDFetcher.getUUIDOf(name);
@@ -2636,11 +2635,11 @@ public class Quests extends JavaPlugin implements ConversationAbandonedListener,
 		} catch (Exception e) {
 			//Do nothing
 		}
-    	
+
     	if (id != null) {
     		quester = getQuester(id);
     	}
-    	
+
     	return quester;
     }
 
